@@ -75,8 +75,10 @@ public final class TestClassWordCount {
          * Question 2: Finding highest average rating among everyone who left at least
          * 10 ratings
          */
+
         // Filter all lines without rating
         JavaRDD<String> ratingsOnly = lines.filter(s -> s.split(",").length == 3);
+        
         // Map all lines with rating to following pair format: (userid, (rating, 1))
         JavaPairRDD<String, Tuple2<Integer, Integer>> ratingPairs = ratingsOnly.mapToPair(x -> {
             String[] parts = x.split(",");
@@ -84,24 +86,24 @@ public final class TestClassWordCount {
             return new Tuple2<>(parts[0], new Tuple2<>(rating, 1));
         });
 
-        JavaPairRDD<String, Tuple2<Integer, Integer>> hallo = ratingPairs
+        // ReduceByKey to add up all ratings and occurences per userid
+        JavaPairRDD<String, Tuple2<Integer, Integer>> summedRatingPairs = ratingPairs
                 .reduceByKey((pair1, pair2) -> new Tuple2<>(pair1._1() + pair2._1(), pair1._2() + pair2._2()));
 
-        JavaPairRDD<String, Tuple2<Integer, Integer>> hallo1 = hallo.filter(s -> s._2()._2() >= 10);
+        // Filter out userids with less than 10 ratings
+        JavaPairRDD<String, Tuple2<Integer, Integer>> usersWithEnoughRatings = summedRatingPairs.filter(s -> s._2()._2() >= 10);
 
-        JavaPairRDD<String, Double> hallo2 = hallo1.mapToPair(x -> {
+        // Compute the average rating per userid
+        JavaPairRDD<String, Double> avgRatings = usersWithEnoughRatings.mapToPair(x -> {
             return new Tuple2<>(x._1(), x._2()._1() / (double) x._2()._2());
         });
 
-        System.out.println("Hoi" + hallo2.mapToPair(x -> x.swap()).sortByKey(false).mapToPair(x -> x.swap()).take(1));
-        
-        // System.out.println("Hoi" + hallo2.take(10));
+        // Sort and store/print the userid with the highest average rating
+        List<Tuple2<String, Double>> highestRatingPair = avgRatings.mapToPair(x -> x.swap()).sortByKey(false).mapToPair(x -> x.swap()).take(1);
+        String userIdWIthHighestRating = highestRatingPair.get(0)._1();
+        System.out.println("Hoi - " + highestRatingPair);
+        System.out.println("Hoi2 - " + userIdWIthHighestRating);
 
-        // JavaPairRDD<Integer, Integer> pairs = ratingsOnly.mapToPair(x ->
-        // x.split(",")new Tuple2());
-        // JavaRDD<String> csvSplit = ratingsOnly.flatMap(s ->
-        // Arrays.asList(s.split(",")).iterator());
-        // System.out.println("Hoi" + csvSplit.take(10));
         spark.stop();
     }
 }
