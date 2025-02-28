@@ -68,8 +68,8 @@ public final class TestClassWordCount {
         // System.out.println(tuple._1() + ": " + tuple._2());
         // }
 
-        System.out.println("Total number of lines in RDD: " + lineCount);
-        System.out.println("Total number of rows in dataset: " + rowCount);
+        System.out.println("Q1 - Total number of lines in RDD: " + lineCount);
+        System.out.println("Q1 - Total number of rows in dataset: " + rowCount);
 
         /*
          * Question 2: Finding highest average rating among everyone who left at least
