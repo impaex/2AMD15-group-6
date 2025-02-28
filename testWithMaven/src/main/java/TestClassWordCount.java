@@ -99,11 +99,15 @@ public final class TestClassWordCount {
         });
 
         // Sort and store/print the userid with the highest average rating
-        List<Tuple2<Integer, Double>> highestRatingPair = avgRatings.mapToPair(x -> x.swap()).sortByKey(false).mapToPair(x -> x.swap()).take(1);
-        Integer userIdWIthHighestRating = highestRatingPair.get(0)._1();
-        System.out.println("Hoi - " + highestRatingPair);
-        System.out.println("Hoi2 - " + userIdWIthHighestRating);
+        Tuple2<Integer, Double> maxUser = avgRatings.reduce((a, b) -> {
+            if (a._2 >= b._2) {
+                return a;
+            } else {
+                return b;
+            }
+        });
 
+        System.out.println("Q2 - " + maxUser);
 
         /*
          * Question 3: Finding highest average rating among everyone who left at least
@@ -112,13 +116,18 @@ public final class TestClassWordCount {
          * This question follows most of Q2's steps, which are reused here.
          */
 
-        // Sort and store/print the userid with the highest average rating
-        // List<Tuple2<String, Double>> highestRatingPair = avgRatings.mapToPair(x -> x.swap()).sortByKey(false).mapToPair(x -> x.swap()).take(1);
-        // String userIdWIthHighestRating = highestRatingPair.get(0)._1();
-        // System.out.println("Hoi - " + highestRatingPair);
-        // System.out.println("Hoi2 - " + userIdWIthHighestRating);
-        
+         Tuple2<Integer, Double> maxUserWithSmallestId = avgRatings.reduce((a, b) -> {
+            if (a._2 > b._2) {
+                return a;
+            } else if (a._2 < b._2) {
+                return b;
+            } else {
+                return a._1 < b._1 ? a : b;  // If ratings are equal, pick the smaller userid
+            }
+        });
 
+        System.out.println("Q3 - " + maxUserWithSmallestId);
+    
         spark.stop();
     }
 }
