@@ -80,29 +80,44 @@ public final class TestClassWordCount {
         JavaRDD<String> ratingsOnly = lines.filter(s -> s.split(",").length == 3);
         
         // Map all lines with rating to following pair format: (userid, (rating, 1))
-        JavaPairRDD<String, Tuple2<Integer, Integer>> ratingPairs = ratingsOnly.mapToPair(x -> {
+        JavaPairRDD<Integer, Tuple2<Integer, Integer>> ratingPairs = ratingsOnly.mapToPair(x -> {
             String[] parts = x.split(",");
             Integer rating = Integer.parseInt(parts[2].trim());
-            return new Tuple2<>(parts[0], new Tuple2<>(rating, 1));
+            return new Tuple2<>(Integer.parseInt(parts[0].trim()), new Tuple2<>(rating, 1));
         });
 
         // ReduceByKey to add up all ratings and occurences per userid
-        JavaPairRDD<String, Tuple2<Integer, Integer>> summedRatingPairs = ratingPairs
+        JavaPairRDD<Integer, Tuple2<Integer, Integer>> summedRatingPairs = ratingPairs
                 .reduceByKey((pair1, pair2) -> new Tuple2<>(pair1._1() + pair2._1(), pair1._2() + pair2._2()));
 
         // Filter out userids with less than 10 ratings
-        JavaPairRDD<String, Tuple2<Integer, Integer>> usersWithEnoughRatings = summedRatingPairs.filter(s -> s._2()._2() >= 10);
+        JavaPairRDD<Integer, Tuple2<Integer, Integer>> usersWithEnoughRatings = summedRatingPairs.filter(s -> s._2()._2() >= 10);
 
         // Compute the average rating per userid
-        JavaPairRDD<String, Double> avgRatings = usersWithEnoughRatings.mapToPair(x -> {
+        JavaPairRDD<Integer, Double> avgRatings = usersWithEnoughRatings.mapToPair(x -> {
             return new Tuple2<>(x._1(), x._2()._1() / (double) x._2()._2());
         });
 
         // Sort and store/print the userid with the highest average rating
-        List<Tuple2<String, Double>> highestRatingPair = avgRatings.mapToPair(x -> x.swap()).sortByKey(false).mapToPair(x -> x.swap()).take(1);
-        String userIdWIthHighestRating = highestRatingPair.get(0)._1();
+        List<Tuple2<Integer, Double>> highestRatingPair = avgRatings.mapToPair(x -> x.swap()).sortByKey(false).mapToPair(x -> x.swap()).take(1);
+        Integer userIdWIthHighestRating = highestRatingPair.get(0)._1();
         System.out.println("Hoi - " + highestRatingPair);
         System.out.println("Hoi2 - " + userIdWIthHighestRating);
+
+
+        /*
+         * Question 3: Finding highest average rating among everyone who left at least
+         * 10 ratings, and if there are more than one, pick the one with the smallest ID
+         * 
+         * This question follows most of Q2's steps, which are reused here.
+         */
+
+        // Sort and store/print the userid with the highest average rating
+        // List<Tuple2<String, Double>> highestRatingPair = avgRatings.mapToPair(x -> x.swap()).sortByKey(false).mapToPair(x -> x.swap()).take(1);
+        // String userIdWIthHighestRating = highestRatingPair.get(0)._1();
+        // System.out.println("Hoi - " + highestRatingPair);
+        // System.out.println("Hoi2 - " + userIdWIthHighestRating);
+        
 
         spark.stop();
     }
