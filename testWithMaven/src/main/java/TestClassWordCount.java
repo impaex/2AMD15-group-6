@@ -8,14 +8,22 @@ import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.Dataset;
-
 import java.io.Serializable;
+
+
+import org.apache.spark.ml.evaluation.RegressionEvaluator;
+import org.apache.spark.ml.recommendation.ALS;
+import org.apache.spark.ml.recommendation.ALSModel;
+
+
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Pattern;
+import static org.apache.spark.sql.functions.col;
 
 import javax.swing.event.SwingPropertyChangeSupport;
+import javax.xml.crypto.Data;
 
 public final class TestClassWordCount {
     private static final Pattern SPACE = Pattern.compile(" ");
@@ -127,6 +135,58 @@ public final class TestClassWordCount {
         });
 
         System.out.println("Q3 - " + maxUserWithSmallestId);
+
+        /*
+         * Question 4: Recommending songs to users
+         */
+
+        /* Remove the rows (songs) without ratings */
+        Dataset<Row> filteredDataSet = dataSet.filter(col("rating").isNotNull());
+
+        /* Split the data in test and training set */
+        Dataset<Row>[] splits = filteredDataSet.randomSplit(new double[]{0.8, 0.2});
+        Dataset<Row> trainingData = splits[0];  // 80% of the data
+        Dataset<Row> testData = splits[1];  // 20% of the data
+
+        /* Train the ALS model */
+        ALS als = new ALS()
+            .setMaxIter(5)
+            .setRegParam(0.01)
+            .setUserCol("userId")
+            .setItemCol("songid")
+            .setRatingCol("rating");
+        
+        /* Fit the model */
+        ALSModel model = als.fit(trainingData);
+
+        /* Set the cold start strategy to drop to ensure we don't get NaN evaluation metrics */
+        model.setColdStartStrategy("drop");
+    
+        /* Predict the ratings */
+        Dataset<Row> predictions = model.transform(testData);
+
+        /* Evaluate the model */
+        RegressionEvaluator evaluator = new RegressionEvaluator()
+            .setMetricName("rmse")
+            .setLabelCol("rating")
+            .setPredictionCol("prediction");    
+        
+        double rmse = evaluator.evaluate(predictions);
+        
+        System.out.println("Q4 - Root-mean-square error = " + rmse);
+    
+        /* Generate top 10 song recommendations for five users */
+        Dataset<Row> users = filteredDataSet.select(als.getUserCol()).distinct().limit(5);
+        Dataset<Row> userSubsetRecs = model.recommendForUserSubset(users, 10);
+        
+        
+
+
+
+
+
+        
+
     
         spark.stop();
     }
