@@ -178,7 +178,9 @@ public final class TestClassWordCount {
         /* Generate top 10 song recommendations for five users */
         Dataset<Row> users = filteredDataSet.select(als.getUserCol()).distinct().limit(5);
         Dataset<Row> userSubsetRecs = model.recommendForUserSubset(users, 10);
-        
+         /* print top 10 song recommendations for five users */
+        System.out.println("Q4 - Top 10 song recommendations for five users:");
+        userSubsetRecs.show(false);
         
 
 
