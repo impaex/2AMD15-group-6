@@ -8,6 +8,8 @@ import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.Dataset;
+import static org.apache.spark.sql.functions.col;
+import org.apache.spark.sql.functions;
 import java.io.Serializable;
 
 
@@ -20,7 +22,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Pattern;
-import static org.apache.spark.sql.functions.col;
 
 import javax.swing.event.SwingPropertyChangeSupport;
 import javax.xml.crypto.Data;
@@ -136,8 +137,9 @@ public final class TestClassWordCount {
 
         System.out.println("Q3 - " + maxUserWithSmallestId);
 
+
         /*
-         * Question 4: Recommending songs to users
+         * Question 5: Recommending songs to users
          */
 
         /* Remove the rows (songs) without ratings */
@@ -173,23 +175,31 @@ public final class TestClassWordCount {
         
         double rmse = evaluator.evaluate(predictions);
         
-        System.out.println("Q4 - Root-mean-square error = " + rmse);
+        System.out.println("Q5 - Root-mean-square error = " + rmse);
     
         /* Generate top 10 song recommendations for five users */
         Dataset<Row> users = filteredDataSet.select(als.getUserCol()).distinct().limit(5);
         Dataset<Row> userSubsetRecs = model.recommendForUserSubset(users, 10);
          /* print top 10 song recommendations for five users */
-        System.out.println("Q4 - Top 10 song recommendations for five users:");
+        System.out.println("Q5 - Top 10 song recommendations for five users:");
         userSubsetRecs.show(false);
         
 
 
+        /*
+         * Question 6: Find most frequently played song
+         */
 
-
-
+        Dataset<Row> songCounts = dataSet.groupBy("songid").count();
+        long maxCount = songCounts.agg(functions.max("count")).first().getLong(0);
         
+        // Filter songs with the maximum count
+        Dataset<Row> mostPlayedSongs = songCounts.filter(functions.col("count").equalTo(maxCount));
 
-    
+        // Show results (search for "songid" in terminal)
+        System.out.println("Q6 - search songid in terminal");
+        mostPlayedSongs.show();
+
         spark.stop();
     }
 }
