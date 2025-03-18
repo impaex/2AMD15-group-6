@@ -26,6 +26,10 @@ import java.util.regex.Pattern;
 import javax.swing.event.SwingPropertyChangeSupport;
 import javax.xml.crypto.Data;
 
+import java.util.Random;
+import java.util.stream.IntStream;
+
+
 public final class TestClassWordCount {
     private static final Pattern SPACE = Pattern.compile(" ");
 
@@ -186,20 +190,24 @@ public final class TestClassWordCount {
         
 
 
-        /*
-         * Question 6: Find most frequently played song
-         */
+        // /*
+        //  * Question 6: Find most frequently played song
+        //  */
 
-        Dataset<Row> songCounts = dataSet.groupBy("songid").count();
-        long maxCount = songCounts.agg(functions.max("count")).first().getLong(0);
+        // Dataset<Row> songCounts = dataSet.groupBy("songid").count();
+        // long maxCount = songCounts.agg(functions.max("count")).first().getLong(0);
         
-        // Filter songs with the maximum count
-        Dataset<Row> mostPlayedSongs = songCounts.filter(functions.col("count").equalTo(maxCount));
+        // // Filter songs with the maximum count
+        // Dataset<Row> mostPlayedSongs = songCounts.filter(functions.col("count").equalTo(maxCount));
 
-        // Show results (search for "songid" in terminal)
-        System.out.println("Q6 - search songid in terminal");
-        mostPlayedSongs.show();
+        // // Show results (search for "songid" in terminal)
+        // System.out.println("Q6 - search songid in terminal");
+        // mostPlayedSongs.show();
 
-        spark.stop();
+        // spark.stop();
+
+
+
+
     }
 }
